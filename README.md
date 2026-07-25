@@ -99,9 +99,15 @@ figures.
 
 ## Data and outputs
 
-Xatu data are downloaded only when a script is run. Confirm the upstream data
-terms and availability before large downloads. Local datasets, Parquet files,
-NumPy arrays, caches, and generated outputs are ignored by Git.
+The analyses use multiple datasets. Public Xatu data are downloaded only when
+the corresponding scripts are run; confirm the upstream data terms and
+availability before large downloads. Additional source and supporting datasets
+are not currently distributed with this repository. They will be uploaded to
+OneDrive, and the download link and file manifest will be added here when the
+data package is ready.
+
+Local datasets, Parquet files, NumPy arrays, caches, and generated outputs are
+ignored by Git.
 
 ## License
 
