@@ -1,114 +1,101 @@
 # OFA Ethereum analysis
 
-A compact collection of Python scripts for measuring Ethereum builder
-concentration and short-run persistence from public
-[Xatu](https://ethpandaops.io/data/xatu/) datasets. The repository contains
-analysis code only; raw data, caches, and generated outputs are intentionally
-excluded.
+Python tools for Ethereum builder concentration, identity attribution, historical
+order-flow measurements and conditional run-length inference.
 
 ## Setup
 
-Python 3.10 or newer is recommended.
+Linux, Python 3.11.
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
+python -m unittest discover -s analysis -p 'test_*.py'
 ```
 
-On Windows, activate the environment with `.venv\Scripts\activate`.
+## Data
 
-## Workflow
+See [DATASETS.md](DATASETS.md) for the input schema, public Xatu preparation
+commands and dataset availability. Additional datasets will be uploaded to
+OneDrive, with download links and manifests added here.
 
-1. Download relay payloads and compute the key-level baseline:
+## Analysis
 
-   ```bash
-   python scripts/compute_xatu_builder_persistence.py \
-     --cache-dir data/xatu-relay \
-     --out-dir outputs/key-baseline \
-     --start 2024-09-16 \
-     --end 2025-10-05 \
-     --permutations 1000
-   ```
+### Calibration and empirical inference
 
-2. Join the relay payloads with canonical execution blocks to construct the
-   normalized `extra_data` identity proxy:
+```bash
+python scripts/calibrate_persistence_null.py \
+  --payloads data/xatu/common_support.parquet --out-dir outputs/calibration \
+  --null-replications 1000 --power-replications 300 \
+  --permutations 999 --workers 48
 
-   ```bash
-   python scripts/compute_xatu_extra_data_sensitivity.py \
-     --payload-cache data/xatu-relay \
-     --cache-dir data/xatu-canonical \
-     --out-dir outputs/identity-proxy \
-     --permutations 1000
-   ```
+python scripts/adjust_persistence_threshold_family.py \
+  --payloads data/xatu/common_support.parquet --out-dir outputs/full-sample \
+  --permutations 10000 --workers 48
 
-   The downstream scripts use
-   `outputs/identity-proxy/xatu_canonical_payloads_by_key_reduced.parquet`.
-   It contains one canonical payload per retained slot and the columns
-   `slot`, `block_number`, `slot_start_date_time`, `builder_pubkey`,
-   `extra_data_tag`, and `builder_identity_proxy`.
+python scripts/compute_xatu_common_support.py \
+  --payloads data/xatu/common_support.parquet --out-dir outputs/windows \
+  --permutations 10000 --workers 48
+```
 
-3. Run focused robustness checks as needed:
+Calibration applies fresh inner permutations to each outer dataset. Inference
+uses pooled standardization, inclusive ranks and a joint maximum statistic over
+two identity units and seven run thresholds. Window analysis covers eight widths
+from 50 to 10,000 slots, two origins and two run definitions; its
+`across_settings_p` includes the 32-setting correction for that identity pair.
 
-   ```bash
-   python scripts/compute_xatu_common_support.py \
-     --payloads outputs/identity-proxy/xatu_canonical_payloads_by_key_reduced.parquet \
-     --out-dir outputs/common-support
+### External identities
 
-   python scripts/validate_builder_identity_proxy.py \
-     --payloads outputs/identity-proxy/xatu_canonical_payloads_by_key_reduced.parquet \
-     --out-dir outputs/identity-validation
+```bash
+python analysis/analyze_identity.py --root data/evidence \
+  --input data/xatu/common_support.parquet --out outputs/identity
+python analysis/check_source_sensitivity.py --root data/evidence \
+  --input data/xatu/common_support.parquet --out outputs/identity-sources
+python analysis/run_identity_windows.py \
+  --payloads outputs/identity/analysis_labels.parquet \
+  --out-dir outputs/external-windows --permutations 10000 --workers 48
+python analysis/analyze_partition_decomposition.py \
+  --root outputs/identity --input data/xatu/common_support.parquet \
+  --out outputs/partition-differences
+```
 
-   python scripts/analyze_persistence_stability.py \
-     --payloads outputs/identity-proxy/xatu_canonical_payloads_by_key_reduced.parquet \
-     --out-dir outputs/stability
+### Contributions and simulation controls
 
-   python scripts/calibrate_persistence_null.py \
-     --payloads outputs/identity-proxy/xatu_canonical_payloads_by_key_reduced.parquet \
-     --out-dir outputs/null-calibration
+```bash
+python scripts/analyze_persistence_stability.py \
+  --payloads outputs/identity/analysis_labels.parquet \
+  --columns raw_key slot_tag historical_service historical_network \
+  --out-dir outputs/contributions
 
-   python scripts/adjust_persistence_threshold_family.py \
-     --payloads outputs/identity-proxy/xatu_canonical_payloads_by_key_reduced.parquet \
-     --out-dir outputs/threshold-family
-   ```
+python analysis/run_controls.py formal \
+  --labels outputs/identity/analysis_labels.parquet \
+  --output-root outputs/controls --workers 48
+python analysis/run_controls.py resolution \
+  --labels outputs/identity/analysis_labels.parquet \
+  --output-root outputs/controls --workers 48
+python analysis/summarize_control_endpoints.py \
+  --input outputs/controls/controls_formal_v1 --out outputs/control-endpoints
+```
 
-Use smaller permutation counts for smoke tests. The defaults in the
-computationally intensive scripts are intended for full runs and may require
-multiple CPU cores.
+Contributions are allocated by run-start identity and chronological period,
+using exact within-window expectations. Controls comprise stationary IID,
+smooth and step-changing IID shares, and three sticky-process strengths.
+The formal stage uses 200 outer samples per model and 1,999 permutations;
+the paired resolution stage uses the first 20 samples and 9,999 permutations.
+Endpoint summaries separate positive and negative rejections for all thresholds
+and for runs of at least eight or ten slots.
 
-## Included scripts
+### Historical summaries
 
-- `compute_xatu_builder_persistence.py`: downloads public relay payloads and
-  computes monthly concentration and run-length statistics.
-- `compute_xatu_extra_data_sensitivity.py`: joins canonical blocks and compares
-  public-key and normalized `extra_data` identity units.
-- `compute_xatu_common_support.py`: evaluates both identity units on identical
-  slot support.
-- `validate_builder_identity_proxy.py`: checks key-to-tag consistency,
-  aggregation, temporal stability, and concentration sensitivity.
-- `analyze_persistence_stability.py`: chronological, leave-one-identity-out,
-  bootstrap, and permutation stability checks.
-- `calibrate_persistence_null.py`: simulation-based null calibration and power
-  analysis.
-- `adjust_persistence_threshold_family.py`: family-wise permutation inference
-  across run-length thresholds.
+```bash
+python analysis/summarize_history.py final \
+  --input data/history/final_v1 --out outputs/history
+```
 
-All scripts expose their parameters through `--help`. Randomized procedures use
-explicit seeds and write machine-readable CSV or JSON summaries alongside
-figures.
-
-## Data and outputs
-
-The analyses use multiple datasets. Public Xatu data are downloaded only when
-the corresponding scripts are run; confirm the upstream data terms and
-availability before large downloads. Additional source and supporting datasets
-are not currently distributed with this repository. They will be uploaded to
-OneDrive, and the download link and file manifest will be added here when the
-data package is ready.
-
-Local datasets, Parquet files, NumPy arrays, caches, and generated outputs are
-ignored by Git.
+All analysis output directories must be new. Use `--help` for individual
+parameters. Small permutation counts are available for execution checks.
 
 ## License
 
-The code in this repository is available under the Apache License 2.0.
+[Apache License 2.0](LICENSE).

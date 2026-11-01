@@ -168,3 +168,7 @@ cache/
 outputs/
 *.parquet
 *.npy
+*.npz
+*.nbc
+*.nbi
+*.zip

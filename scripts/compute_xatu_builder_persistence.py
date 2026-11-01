@@ -45,6 +45,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--permutations", type=int, default=100)
     parser.add_argument("--seed", type=int, default=20260719)
     parser.add_argument("--request-timeout", type=int, default=90)
+    parser.add_argument("--prepare-only", action="store_true")
     return parser.parse_args()
 
 
@@ -305,6 +306,12 @@ def main() -> None:
 
     monthly = concentration_by_month(frame)
     monthly.to_csv(out_dir / "xatu_monthly_concentration.csv", index=False)
+
+    if args.prepare_only:
+        (out_dir / "download_summary.json").write_text(
+            json.dumps({"rows": len(frame), "daily_quality": daily_quality}, indent=2)
+        )
+        return
 
     summary_rows: list[dict[str, object]] = []
     builder_rows: list[dict[str, object]] = []

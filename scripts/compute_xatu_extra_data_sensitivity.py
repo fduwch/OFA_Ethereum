@@ -53,6 +53,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--permutations", type=int, default=1_000)
     parser.add_argument("--seed", type=int, default=20260720)
     parser.add_argument("--request-timeout", type=int, default=90)
+    parser.add_argument("--prepare-only", action="store_true")
     return parser.parse_args()
 
 
@@ -322,6 +323,16 @@ def main() -> None:
         coerce_timestamps="us",
         allow_truncated_timestamps=True,
     )
+
+    if args.prepare_only:
+        (out_dir / "canonical_summary.json").write_text(json.dumps({
+            "payload_candidates": len(payload_candidates),
+            "canonical_matches": len(canonical_matches),
+            "key_slots": len(key_selected),
+            "tag_slots": len(proxy_selected),
+            "error_chunks": [chunk for chunk, status in statuses.items() if status == "error"],
+        }, indent=2))
+        return
 
     result_frames: list[pd.DataFrame] = []
     monthly_frames: list[pd.DataFrame] = []

@@ -1,5 +1,8 @@
-matplotlib>=3.7,<4
-numpy>=1.24,<3
-pandas>=2.0,<3
-pyarrow>=14
+matplotlib>=3.7,<3.8
+numpy==1.24.3
+pandas==2.0.3
+pyarrow==11.0.0
+numba==0.57.1
+llvmlite==0.40.0
+beautifulsoup4==4.12.2
 requests>=2.31,<3
