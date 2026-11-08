@@ -1,23 +1,23 @@
 # Datasets
 
-The analyses use five data collections. Packaged inputs, retained monitor
-records, source collections and saved simulation arrays are available in a
-read-only [OneDrive folder](https://1drv.ms/f/c/cdc0f83bf736d892/IgD5jmPgG7mPR4tunC0UTX4zAZj9UtpOkchfKvWCPQ_mO-o):
+## Download
 
-- `ofa-reproducibility.zip`: analysis inputs, identity evidence, historical
-  aggregates, code and reference outputs.
-- `upgrade-experiments-complete-controls-development-20261028.zip`: multiscale
-  analysis, simulation controls, external identity analysis, historical
-  comparisons and stored simulation outputs.
-- `ofa-directional-supplement-20261030.zip`: directional endpoint summaries for
-  the complete-controls package.
-- `ofa-joint-controls-supplement-20261108.zip`: paired drift-plus-dependence
-  controls, saved counts and summaries for the complete-controls package.
-- `source-data/`: source collections, catalogued in `INDEX.json`.
+All packages are in a read-only
+[OneDrive folder](https://1drv.ms/f/c/cdc0f83bf736d892/IgD5jmPgG7mPR4tunC0UTX4zAZj9UtpOkchfKvWCPQ_mO-o).
 
-Extract the first two archives into separate directories; both contain a
-top-level `ofa-reproducibility` directory. Each archive includes its own
-instructions and file manifest.
+| File | Contents |
+| --- | --- |
+| `ofa-reproducibility.zip` | Inputs, identity evidence, historical aggregates, code and reference outputs |
+| `upgrade-experiments-complete-controls-development-20261028.zip` | Multi-scale analysis, simulation controls, external identities, historical comparison and saved simulation outputs |
+| `ofa-directional-supplement-20261030.zip` | Directional endpoint summaries for the controls package |
+| `ofa-joint-controls-supplement-20261108.zip` | Joint drift-plus-dependence controls for the controls package |
+| `source-data/` | Source collections; `INDEX.json` lists each archive |
+
+Extract the first two archives into separate directories, because both use the
+top-level directory `ofa-reproducibility/`. Each archive contains its own README
+and file manifest.
+
+## Inputs
 
 | Collection | Contents | Local path |
 | --- | --- | --- |
@@ -27,14 +27,17 @@ instructions and file manifest.
 | Historical monitoring | Retained monitor records, candidate transactions, hourly counts and canonical transaction denominators | `data/history/` |
 | Simulation outputs | Observed run counts, permutation arrays and per-sample inference | `data/simulations/` |
 
-The frozen common-support input contains 2,332,997 rows. Its SHA-256 is
-`06bac99220ff55814d91d43a7d2082f6409968bd98078f4dec946bab485c7c78`.
-External analysis produces `analysis_labels.parquet`, whose SHA-256 is
-`ed984f72d574ed69352ad983366d9df2c0325a02eb22523b71953384dad099cd`.
-The external-identity and control runners use these frozen inputs.
+Frozen inputs used by the identity and control runners:
 
-Public relay and canonical-block exports are available from
-[Xatu](https://ethpandaops.io/data/xatu/). To prepare a local input:
+- `common_support.parquet`: 2,332,997 rows, SHA-256
+  `06bac99220ff55814d91d43a7d2082f6409968bd98078f4dec946bab485c7c78`.
+- `analysis_labels.parquet` (output of the identity analysis): SHA-256
+  `ed984f72d574ed69352ad983366d9df2c0325a02eb22523b71953384dad099cd`.
+
+## Preparing the Xatu input
+
+Relay and canonical-block exports are public at
+[Xatu](https://ethpandaops.io/data/xatu/).
 
 ```bash
 python scripts/compute_xatu_builder_persistence.py \
@@ -44,15 +47,15 @@ python scripts/compute_xatu_extra_data_sensitivity.py \
   --out-dir outputs/canonical --prepare-only
 ```
 
-The canonical common-support file is
-`outputs/canonical/xatu_canonical_payloads_by_key_reduced.parquet`.
-Download dates are set with `--start` and `--end` on the relay script.
+The result is `outputs/canonical/xatu_canonical_payloads_by_key_reduced.parquet`.
+Set the download period with `--start` and `--end` on the relay script.
 
-Historical monitoring availability varies by period. The complete 2020–2022 raw
-monitor archive is unavailable; retained candidate records and aggregates are
-listed separately in the data package. The matched-hour analysis uses explicit
-source-availability flags and canonical inclusion-hour denominators.
+## Notes
 
-External evidence follows the `sources/`, `registries_complete/` and
-`archive_transfer/` layout inside `data/evidence/`. Each source snapshot is
-identified by its manifest entry and checksum.
+- Historical monitoring: the complete 2020-2022 raw monitor archive is not
+  available. Retained candidate records and aggregates are provided, and the
+  matched-hour analysis uses source-availability flags and canonical
+  inclusion-hour denominators.
+- External evidence: `data/evidence/` uses the `sources/`,
+  `registries_complete/` and `archive_transfer/` layout; each snapshot has a
+  manifest entry and checksum.

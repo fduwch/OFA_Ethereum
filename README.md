@@ -1,7 +1,8 @@
 # OFA Ethereum analysis
 
-Python tools for Ethereum builder concentration, identity attribution, historical
-order-flow measurements and conditional run-length inference.
+Code for the measurements in the paper: builder concentration under different
+identity units, external identity attribution, historical order-flow shares and
+conditional run-length (consecutive-win) inference.
 
 ## Setup
 
@@ -16,15 +17,16 @@ python -m unittest discover -s analysis -p 'test_*.py'
 
 ## Data
 
-See [DATASETS.md](DATASETS.md) for the input schema, public Xatu preparation
-commands and dataset availability. Reproduction packages, retained monitor
-records, source collections and saved simulation outputs are available in a
-read-only [OneDrive folder](https://1drv.ms/f/c/cdc0f83bf736d892/IgD5jmPgG7mPR4tunC0UTX4zAZj9UtpOkchfKvWCPQ_mO-o); [DATASETS.md](DATASETS.md)
-lists the packages.
+Data packages are in a read-only
+[OneDrive folder](https://1drv.ms/f/c/cdc0f83bf736d892/IgD5jmPgG7mPR4tunC0UTX4zAZj9UtpOkchfKvWCPQ_mO-o).
+[DATASETS.md](DATASETS.md) describes the packages and input formats.
 
 ## Analysis
 
-### Calibration and empirical inference
+Output directories must not already exist. Use `--help` for all options; small
+permutation counts are enough for quick checks.
+
+### 1. Calibration and run-length inference
 
 ```bash
 python scripts/calibrate_persistence_null.py \
@@ -41,13 +43,13 @@ python scripts/compute_xatu_common_support.py \
   --permutations 10000 --workers 48
 ```
 
-Calibration applies fresh inner permutations to each outer dataset. Inference
-uses pooled standardization, inclusive ranks and a joint maximum statistic over
-two identity units and seven run thresholds. Window analysis covers eight widths
-from 50 to 10,000 slots, two origins and two run definitions; its
-`across_settings_p` includes the 32-setting correction for that identity pair.
+- Calibration runs a fresh permutation test on every simulated dataset.
+- Inference uses a joint maximum statistic over 14 coordinates (seven run
+  thresholds, two identity units).
+- The window analysis covers 8 widths (50-10,000 slots), 2 origins and 2 run
+  definitions; `across_settings_p` applies the 32-setting correction.
 
-### External identities
+### 2. External identities
 
 ```bash
 python analysis/analyze_identity.py --root data/evidence \
@@ -62,7 +64,7 @@ python analysis/analyze_partition_decomposition.py \
   --out outputs/partition-differences
 ```
 
-### Contributions and simulation controls
+### 3. Contributions and simulation controls
 
 ```bash
 python scripts/analyze_persistence_stability.py \
@@ -85,26 +87,21 @@ python analysis/run_joint_controls.py formal \
   --output-root outputs/joint-controls --workers 48
 ```
 
-Contributions are allocated by run-start identity and chronological period,
-using exact within-window expectations. Controls comprise stationary IID,
-smooth and step-changing IID shares, and three sticky-process strengths.
-The formal stage uses 200 outer samples per model and 1,999 permutations;
-the paired resolution stage uses the first 20 samples and 9,999 permutations.
-Endpoint summaries separate positive and negative rejections for all thresholds
-and for runs of at least eight or ten slots. Joint controls combine the smooth
-and step-changing shares with copy probabilities 0.005, 0.020 and 0.050, reuse
-the first 100 baseline samples and inner permutation streams, and report paired
-event counts against the matching zero-copy baselines.
+- Contributions: by run-start identity and period, with exact within-window
+  expectations.
+- Controls: stationary, smooth and step-changing shares, and three copy
+  strengths; 200 samples x 1,999 permutations (resolution check: first 20
+  samples x 9,999).
+- Joint controls: smooth or step-changing shares combined with copy
+  probabilities 0.005, 0.020 and 0.050, paired with the zero-copy baselines
+  (first 100 samples, same permutation streams).
 
-### Historical summaries
+### 4. Historical summaries
 
 ```bash
 python analysis/summarize_history.py final \
   --input data/history/final_v1 --out outputs/history
 ```
-
-All analysis output directories must be new. Use `--help` for individual
-parameters. Small permutation counts are available for execution checks.
 
 ## License
 
