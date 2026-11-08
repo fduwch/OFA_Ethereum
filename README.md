@@ -17,8 +17,10 @@ python -m unittest discover -s analysis -p 'test_*.py'
 ## Data
 
 See [DATASETS.md](DATASETS.md) for the input schema, public Xatu preparation
-commands and dataset availability. Additional datasets will be uploaded to
-OneDrive, with download links and manifests added here.
+commands and dataset availability. Reproduction packages, retained monitor
+records, source collections and saved simulation outputs are available in a
+read-only [OneDrive folder](https://1drv.ms/f/c/cdc0f83bf736d892/IgD5jmPgG7mPR4tunC0UTX4zAZj9UtpOkchfKvWCPQ_mO-o); [DATASETS.md](DATASETS.md)
+lists the packages.
 
 ## Analysis
 
@@ -76,6 +78,11 @@ python analysis/run_controls.py resolution \
   --output-root outputs/controls --workers 48
 python analysis/summarize_control_endpoints.py \
   --input outputs/controls/controls_formal_v1 --out outputs/control-endpoints
+
+python analysis/run_joint_controls.py formal \
+  --labels outputs/identity/analysis_labels.parquet \
+  --baseline outputs/controls/controls_formal_v1 \
+  --output-root outputs/joint-controls --workers 48
 ```
 
 Contributions are allocated by run-start identity and chronological period,
@@ -84,7 +91,10 @@ smooth and step-changing IID shares, and three sticky-process strengths.
 The formal stage uses 200 outer samples per model and 1,999 permutations;
 the paired resolution stage uses the first 20 samples and 9,999 permutations.
 Endpoint summaries separate positive and negative rejections for all thresholds
-and for runs of at least eight or ten slots.
+and for runs of at least eight or ten slots. Joint controls combine the smooth
+and step-changing shares with copy probabilities 0.005, 0.020 and 0.050, reuse
+the first 100 baseline samples and inner permutation streams, and report paired
+event counts against the matching zero-copy baselines.
 
 ### Historical summaries
 

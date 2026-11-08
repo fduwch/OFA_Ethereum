@@ -1,8 +1,23 @@
 # Datasets
 
-The analyses use five data collections. Additional datasets and saved simulation
-arrays will be uploaded to OneDrive; download links and file manifests will be
-added here when available.
+The analyses use five data collections. Packaged inputs, retained monitor
+records, source collections and saved simulation arrays are available in a
+read-only [OneDrive folder](https://1drv.ms/f/c/cdc0f83bf736d892/IgD5jmPgG7mPR4tunC0UTX4zAZj9UtpOkchfKvWCPQ_mO-o):
+
+- `ofa-reproducibility.zip`: analysis inputs, identity evidence, historical
+  aggregates, code and reference outputs.
+- `upgrade-experiments-complete-controls-development-20261028.zip`: multiscale
+  analysis, simulation controls, external identity analysis, historical
+  comparisons and stored simulation outputs.
+- `ofa-directional-supplement-20261030.zip`: directional endpoint summaries for
+  the complete-controls package.
+- `ofa-joint-controls-supplement-20261108.zip`: paired drift-plus-dependence
+  controls, saved counts and summaries for the complete-controls package.
+- `source-data/`: source collections, catalogued in `INDEX.json`.
+
+Extract the first two archives into separate directories; both contain a
+top-level `ofa-reproducibility` directory. Each archive includes its own
+instructions and file manifest.
 
 | Collection | Contents | Local path |
 | --- | --- | --- |
